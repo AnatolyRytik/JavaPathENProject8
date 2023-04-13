@@ -60,6 +60,16 @@ public class TourGuideService {
 		return user.getUserRewards();
 	}
 
+	public Map<UUID, VisitedLocation> getAllUsersLastVisitedLocations() {
+		List<User> allUsers = getAllUsers();
+		Map<UUID, VisitedLocation> lastVisitedLocations = new HashMap<>();
+		for (User user : allUsers) {
+			VisitedLocation lastVisitedLocation = getUserLocation(user);
+			lastVisitedLocations.put(user.getUserId(), lastVisitedLocation);
+		}
+		return lastVisitedLocations;
+	}
+
 	public VisitedLocation getUserLocation(User user) {
 		VisitedLocation visitedLocation;
 		if (user.getVisitedLocations().size() > 0) {
