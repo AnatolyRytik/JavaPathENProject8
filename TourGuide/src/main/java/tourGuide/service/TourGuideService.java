@@ -2,18 +2,11 @@ package tourGuide.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
@@ -28,6 +21,7 @@ import tourGuide.helper.InternalTestHelper;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
+import tourGuide.utils.NearbyAttraction;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
@@ -40,6 +34,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 	private final ExecutorService executor;
+
 	
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -70,6 +65,23 @@ public class TourGuideService {
 		return lastVisitedLocations;
 	}
 
+	public List<NearbyAttraction> getClosestFiveAttractions(VisitedLocation visitedLocation) {
+		List<Attraction> allAttractions = gpsUtil.getAttractions();
+		List<NearbyAttraction> closestAttractions = new ArrayList<>();
+		User user = getUserById(visitedLocation.userId);
+
+		for (Attraction attraction : allAttractions) {
+			double distance = rewardsService.getDistance(attraction, visitedLocation.location);
+			int rewardPoints = rewardsService.getRewardPoints(attraction, user);
+			NearbyAttraction nearbyAttraction = new NearbyAttraction(attraction.attractionName, attraction, visitedLocation.location, distance, rewardPoints);
+			closestAttractions.add(nearbyAttraction);
+		}
+
+		// Sort attractions by distance and pick the closest five
+		closestAttractions.sort(Comparator.comparingDouble(NearbyAttraction::getDistanceInMiles));
+		return closestAttractions.subList(0, Math.min(closestAttractions.size(), 5));
+	}
+
 	public VisitedLocation getUserLocation(User user) {
 		VisitedLocation visitedLocation;
 		if (user.getVisitedLocations().size() > 0) {
@@ -86,6 +98,10 @@ public class TourGuideService {
 	
 	public User getUser(String userName) {
 		return internalUserMap.get(userName);
+	}
+
+	public User getUserById(UUID userId) {
+		return internalUserMap.get(userId);
 	}
 
 	public List<User> getAllUsers() {
