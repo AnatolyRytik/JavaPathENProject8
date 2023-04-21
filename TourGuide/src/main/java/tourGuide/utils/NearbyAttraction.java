@@ -6,14 +6,14 @@ public class NearbyAttraction {
     private String name;
     private Location attractionLocation;
     private Location userLocation;
-    private double distanceInMiles;
+    private double distanceInKm;
     private int rewardPoints;
 
     public NearbyAttraction(String name, Location attractionLocation, Location userLocation, double distanceInMiles, int rewardPoints) {
         this.name = name;
         this.attractionLocation = attractionLocation;
         this.userLocation = userLocation;
-        this.distanceInMiles = distanceInMiles;
+        this.distanceInKm = distanceInMiles;
         this.rewardPoints = rewardPoints;
     }
 
@@ -41,12 +41,12 @@ public class NearbyAttraction {
         this.userLocation = userLocation;
     }
 
-    public double getDistanceInMiles() {
-        return distanceInMiles;
+    public double getDistanceInKm() {
+        return distanceInKm;
     }
 
-    public void setDistanceInMiles(double distanceInMiles) {
-        this.distanceInMiles = distanceInMiles;
+    public void setDistanceInKm(double distanceInKm) {
+        this.distanceInKm = distanceInKm;
     }
 
     public int getRewardPoints() {

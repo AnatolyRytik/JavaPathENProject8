@@ -65,7 +65,7 @@ public class TourGuideService {
 		return lastVisitedLocations;
 	}
 
-	public List<NearbyAttraction> getClosestFiveAttractions(VisitedLocation visitedLocation) {
+	public List<NearbyAttraction> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> allAttractions = gpsUtil.getAttractions();
 		List<NearbyAttraction> closestAttractions = new ArrayList<>();
 		User user = getUserById(visitedLocation.userId);
@@ -78,7 +78,7 @@ public class TourGuideService {
 		}
 
 		// Sort attractions by distance and pick the closest five
-		closestAttractions.sort(Comparator.comparingDouble(NearbyAttraction::getDistanceInMiles));
+		closestAttractions.sort(Comparator.comparingDouble(NearbyAttraction::getDistanceInKm));
 		return closestAttractions.subList(0, Math.min(closestAttractions.size(), 5));
 	}
 
@@ -101,7 +101,10 @@ public class TourGuideService {
 	}
 
 	public User getUserById(UUID userId) {
-		return internalUserMap.get(userId);
+		return internalUserMap.values().stream()
+				.filter(user -> user.getUserId().equals(userId))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public List<User> getAllUsers() {
@@ -115,7 +118,7 @@ public class TourGuideService {
 	}
 	
 	public List<Provider> getTripDeals(User user) {
-		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
+		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(UserReward::getRewardPoints).sum();
 		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
 				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
 		user.setTripDeals(providers);
@@ -130,17 +133,6 @@ public class TourGuideService {
 		}, executor);
 	}
 
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for(Attraction attraction : gpsUtil.getAttractions()) {
-			if(rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
-			}
-		}
-		
-		return nearbyAttractions;
-	}
-	
 	private void addShutDownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
 		      public void run() {
