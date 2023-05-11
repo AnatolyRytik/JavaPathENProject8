@@ -27,52 +27,51 @@ public class RewardsService {
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 	private final ExecutorService executor;
-	
+
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsCentral = rewardCentral;
 		this.executor = Executors.newFixedThreadPool(100);
 	}
 
-	
+
 	public void setProximityBuffer(int proximityBuffer) {
 		this.proximityBuffer = proximityBuffer;
 	}
-	
+
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
 
 	public CompletableFuture<Void> calculateRewards(User user) {
 		return CompletableFuture.runAsync(() -> {
-			if (user.getUserRewards().isEmpty()) {
-				List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
-				List<Attraction> attractions = gpsUtil.getAttractions();
-				for (VisitedLocation visitedLocation : userLocations) {
-					for (Attraction attraction : attractions) {
-						if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-							if (nearAttraction(visitedLocation, attraction)) {
-								user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-							}
+
+			List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
+			List<Attraction> attractions = gpsUtil.getAttractions();
+			for (VisitedLocation visitedLocation : userLocations) {
+				for (Attraction attraction : attractions) {
+					if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+						if (nearAttraction(visitedLocation, attraction)) {
+							user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 						}
 					}
 				}
 			}
 		}, executor);
 	}
-	
+
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
 		return getDistance(attraction, location) > attractionProximityRange ? false : true;
 	}
-	
+
 	private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
 		return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
 	}
-	
+
 	int getRewardPoints(Attraction attraction, User user) {
 		return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
 	}
-	
+
 	public double getDistance(Location loc1, Location loc2) {
         double lat1 = Math.toRadians(loc1.latitude);
         double lon1 = Math.toRadians(loc1.longitude);

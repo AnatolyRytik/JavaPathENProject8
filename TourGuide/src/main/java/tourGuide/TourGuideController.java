@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tourGuide.service.TourGuideService;
-import tourGuide.service.UserService;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
@@ -23,7 +22,7 @@ public class TourGuideController {
     private Logger log = LoggerFactory.getLogger(TourGuideController.class);
     private final TourGuideService tourGuideService;
 
-    public TourGuideController(TourGuideService tourGuideService, UserService userService) {
+    public TourGuideController(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
     }
 
